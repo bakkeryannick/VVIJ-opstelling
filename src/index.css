@@ -16,9 +16,23 @@ body {
   background-color: #f3f4f6;
   min-height: 100vh;
   min-height: 100dvh;
+  /* Prevent pull-to-refresh on mobile */
+  overscroll-behavior: none;
 }
 
 #root {
   min-height: 100vh;
   min-height: 100dvh;
+}
+
+/* Improve touch behavior for draggable elements */
+[data-draggable] {
+  touch-action: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* Prevent context menu on long press */
+.touch-none {
+  -webkit-touch-callout: none;
 }

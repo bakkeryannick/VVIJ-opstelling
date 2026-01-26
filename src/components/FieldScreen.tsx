@@ -72,12 +72,12 @@ export function FieldScreen({
 
   const touchSensor = useSensor(TouchSensor, {
     activationConstraint: {
-      delay: 150,
-      tolerance: 5,
+      delay: 100,
+      tolerance: 8,
     },
   });
 
-  const sensors = useSensors(mouseSensor, touchSensor);
+  const sensors = useSensors(touchSensor, mouseSensor);
 
   const handleDragStart = (event: DragStartEvent) => {
     const { active } = event;
