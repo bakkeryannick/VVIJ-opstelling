@@ -102,11 +102,11 @@ export function useMatchState() {
 
       if (error) {
         console.error('Supabase update error:', error);
-        throw error;
+        // Don't throw - local state is already updated, sync will recover
       }
     } catch (err) {
-      console.error('updateMatchState error:', err);
-      throw new Error(err instanceof Error ? err.message : 'Fout bij opslaan');
+      console.error('updateMatchState network error:', err);
+      // Don't throw - keep the app working with local state
     }
   }, []);
 
