@@ -53,6 +53,8 @@ export interface MatchState {
   player_times: Record<string, PlayerPlayTime>;
   // Vlaggenist (flag person)
   flag_player: string | null;
+  // Wedstrijdnaam (optioneel)
+  match_name: string | null;
 }
 
 export interface FormationConfig {

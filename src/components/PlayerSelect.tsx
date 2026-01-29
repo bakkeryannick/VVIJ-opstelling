@@ -3,7 +3,7 @@ import type { Player, Formation } from '../types';
 
 interface PlayerSelectProps {
   players: Player[];
-  onStart: (presentPlayerIds: string[], formation: Formation) => void;
+  onStart: (presentPlayerIds: string[], formation: Formation, opponentName: string | null) => void;
   onCancel: () => void;
 }
 
@@ -16,6 +16,7 @@ const formations: { id: Formation; label: string }[] = [
 export function PlayerSelect({ players, onStart, onCancel }: PlayerSelectProps) {
   const [selectedPlayers, setSelectedPlayers] = useState<Set<string>>(new Set());
   const [formation, setFormation] = useState<Formation>('4-3-3');
+  const [opponentName, setOpponentName] = useState('');
 
   const togglePlayer = (playerId: string) => {
     setSelectedPlayers(prev => {
@@ -38,7 +39,7 @@ export function PlayerSelect({ players, onStart, onCancel }: PlayerSelectProps) 
   };
 
   const handleStart = () => {
-    onStart(Array.from(selectedPlayers), formation);
+    onStart(Array.from(selectedPlayers), formation, opponentName.trim() || null);
   };
 
   return (
@@ -57,6 +58,23 @@ export function PlayerSelect({ players, onStart, onCancel }: PlayerSelectProps) 
       </div>
 
       <div className="flex-1 overflow-auto p-4">
+        {/* Opponent name input */}
+        <div className="bg-white rounded-lg shadow-sm p-4 mb-4">
+          <h2 className="text-sm font-medium text-gray-700 mb-3">Tegenstander (optioneel)</h2>
+          <input
+            type="text"
+            value={opponentName}
+            onChange={(e) => setOpponentName(e.target.value)}
+            placeholder="Tegenstander"
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
+          />
+          {opponentName.trim() && (
+            <p className="mt-2 text-sm text-gray-500">
+              Wedstrijd: VVIJ Zo 2 - {opponentName.trim()}
+            </p>
+          )}
+        </div>
+
         {/* Formation picker */}
         <div className="bg-white rounded-lg shadow-sm p-4 mb-4">
           <h2 className="text-sm font-medium text-gray-700 mb-3">Formatie</h2>

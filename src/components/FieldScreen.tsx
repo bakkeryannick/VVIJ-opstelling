@@ -31,6 +31,7 @@ interface FieldScreenProps {
   onManagePlayers: () => void;
   onStartTimer: () => void;
   onPauseTimer: () => void;
+  onSetTime: (seconds: number) => void;
   onShowStats: () => void;
   onAddPlayerToMatch: (playerId: string) => Promise<void>;
   onRemovePlayerFromMatch: (playerId: string) => Promise<void>;
@@ -49,6 +50,7 @@ export function FieldScreen({
   onManagePlayers,
   onStartTimer,
   onPauseTimer,
+  onSetTime,
   onShowStats,
   onAddPlayerToMatch,
   onRemovePlayerFromMatch,
@@ -120,6 +122,12 @@ export function FieldScreen({
     <div className="min-h-screen bg-gray-100 flex flex-col">
       {/* Header */}
       <div className="bg-white border-b border-gray-200 px-4 py-3 sticky top-0 z-20">
+        {/* Match name */}
+        {matchState.match_name && (
+          <div className="text-center mb-2">
+            <span className="text-sm font-semibold text-gray-800">{matchState.match_name}</span>
+          </div>
+        )}
         {/* Top row: Logo + Formation + Menu */}
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-3">
@@ -157,6 +165,7 @@ export function FieldScreen({
             onStart={onStartTimer}
             onPause={onPauseTimer}
             onShowStats={onShowStats}
+            onSetTime={onSetTime}
           />
         </div>
 

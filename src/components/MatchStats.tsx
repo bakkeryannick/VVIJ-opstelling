@@ -96,21 +96,28 @@ export function MatchStats({
   return (
     <div className="min-h-screen bg-gray-100">
       {/* Header */}
-      <div className="bg-red-600 text-white px-4 py-3 flex items-center justify-between sticky top-0 z-10">
-        <div className="flex items-center gap-3">
-          <button
-            onClick={onClose}
-            className="p-2 -ml-2 hover:bg-red-700 rounded-lg transition-colors"
-          >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-            </svg>
-          </button>
-          <h1 className="text-lg font-semibold">Speeltijd Overzicht</h1>
+      <div className="bg-red-600 text-white px-4 py-3 sticky top-0 z-10">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <button
+              onClick={onClose}
+              className="p-2 -ml-2 hover:bg-red-700 rounded-lg transition-colors"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              </svg>
+            </button>
+            <h1 className="text-lg font-semibold">Speeltijd Overzicht</h1>
+          </div>
+          <div className="text-lg font-mono font-semibold">
+            {formatTime(matchTime)}
+          </div>
         </div>
-        <div className="text-lg font-mono font-semibold">
-          {formatTime(matchTime)}
-        </div>
+        {matchState.match_name && (
+          <div className="text-center mt-1 text-red-100 text-sm">
+            {matchState.match_name}
+          </div>
+        )}
       </div>
 
       <div className="p-4">

@@ -26,6 +26,7 @@ function App() {
     startTimer,
     pauseTimer,
     resetTimer,
+    setTimerTime,
     getPlayerPlayTime,
     getPlayerFlagTime,
     addPlayerToMatch,
@@ -56,9 +57,10 @@ function App() {
 
   const handleStartMatch = async (
     presentPlayerIds: string[],
-    formation: Formation
+    formation: Formation,
+    opponentName: string | null
   ) => {
-    await startNewMatch(presentPlayerIds, formation);
+    await startNewMatch(presentPlayerIds, formation, opponentName);
     setView('field');
   };
 
@@ -162,6 +164,7 @@ function App() {
           onManagePlayers={() => setView('manage-players')}
           onStartTimer={startTimer}
           onPauseTimer={pauseTimer}
+          onSetTime={setTimerTime}
           onShowStats={() => setView('match-stats')}
           onAddPlayerToMatch={addPlayerToMatch}
           onRemovePlayerFromMatch={removePlayerFromMatch}

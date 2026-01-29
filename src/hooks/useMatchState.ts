@@ -73,12 +73,13 @@ export function useMatchState() {
 
       if (error) throw error;
 
-      // Ensure timer, player_times and flag_player exist (for backwards compatibility)
+      // Ensure timer, player_times, flag_player and match_name exist (for backwards compatibility)
       const stateWithTimer: MatchState = {
         ...data,
         timer: data.timer || DEFAULT_TIMER,
         player_times: data.player_times || {},
         flag_player: data.flag_player || null,
+        match_name: data.match_name || null,
       };
 
       setMatchState(stateWithTimer);
@@ -217,6 +218,29 @@ export function useMatchState() {
       timer: DEFAULT_TIMER,
       player_times: {},
     });
+  }, [matchState, updateMatchState]);
+
+  // Set timer to a specific time (in seconds)
+  const setTimerTime = useCallback(async (seconds: number) => {
+    if (!matchState) return;
+
+    const now = Date.now();
+
+    // If timer is running, we set startedAt to now and elapsedBeforePause to the desired time
+    // If timer is paused, we just update elapsedBeforePause
+    const newTimer: MatchTimer = matchState.timer.isRunning
+      ? {
+          isRunning: true,
+          startedAt: now,
+          elapsedBeforePause: seconds,
+        }
+      : {
+          isRunning: false,
+          startedAt: null,
+          elapsedBeforePause: seconds,
+        };
+
+    await updateMatchState({ timer: newTimer });
   }, [matchState, updateMatchState]);
 
   // Debounced update for position offsets
@@ -620,8 +644,10 @@ export function useMatchState() {
 
   const startNewMatch = useCallback(async (
     presentPlayerIds: string[],
-    formation: Formation
+    formation: Formation,
+    opponentName: string | null = null
   ) => {
+    const matchName = opponentName ? `VVIJ Zo 2 - ${opponentName}` : null;
     await updateMatchState({
       formation,
       field_positions: {},
@@ -630,6 +656,7 @@ export function useMatchState() {
       timer: DEFAULT_TIMER,
       player_times: {},
       flag_player: null,
+      match_name: matchName,
     });
   }, [updateMatchState]);
 
@@ -724,12 +751,13 @@ export function useMatchState() {
         { event: 'UPDATE', schema: 'public', table: 'match_state' },
         (payload) => {
           const newState = payload.new as MatchState;
-          // Ensure timer, player_times and flag_player exist
+          // Ensure timer, player_times, flag_player and match_name exist
           setMatchState({
             ...newState,
             timer: newState.timer || DEFAULT_TIMER,
             player_times: newState.player_times || {},
             flag_player: newState.flag_player || null,
+            match_name: newState.match_name || null,
           });
         }
       )
@@ -757,6 +785,7 @@ export function useMatchState() {
     startTimer,
     pauseTimer,
     resetTimer,
+    setTimerTime,
     getElapsedSeconds,
     getPlayerPlayTime,
     getPlayerFlagTime,

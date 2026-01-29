@@ -9,6 +9,7 @@ interface HomeScreenProps {
 }
 
 export function HomeScreen({
+  matchState,
   hasCurrentMatch,
   onNewMatch,
   onContinueMatch,
@@ -33,7 +34,10 @@ export function HomeScreen({
               onClick={onContinueMatch}
               className="w-full py-4 bg-red-600 text-white font-semibold rounded-lg hover:bg-red-700 transition-colors shadow-sm"
             >
-              Ga verder met huidige wedstrijd
+              <div>Ga verder met huidige wedstrijd</div>
+              {matchState?.match_name && (
+                <div className="text-sm text-red-200 mt-1">{matchState.match_name}</div>
+              )}
             </button>
           )}
 
