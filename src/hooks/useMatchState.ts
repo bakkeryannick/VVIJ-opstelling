@@ -73,6 +73,8 @@ export function useMatchState() {
 
       if (error) throw error;
 
+      console.log('[VVIJ] Loaded from Supabase - timer:', JSON.stringify(data.timer));
+
       // Ensure timer, player_times, flag_player and match_name exist (for backwards compatibility)
       const stateWithTimer: MatchState = {
         ...data,
@@ -94,19 +96,22 @@ export function useMatchState() {
     // Update local state immediately for responsive UI
     setMatchState(prev => prev ? { ...prev, ...updates } : null);
 
+    const payload = { ...updates, updated_at: new Date().toISOString() };
+    console.log('[VVIJ] Saving to Supabase:', Object.keys(updates).join(', '));
+
     try {
       const { error } = await supabase
         .from('match_state')
-        .update({ ...updates, updated_at: new Date().toISOString() })
+        .update(payload)
         .eq('id', MATCH_ID);
 
       if (error) {
-        console.error('Supabase update error:', error);
-        // Don't throw - local state is already updated, sync will recover
+        console.error('[VVIJ] Supabase update ERROR:', error.message, error);
+      } else {
+        console.log('[VVIJ] Supabase update OK');
       }
     } catch (err) {
-      console.error('updateMatchState network error:', err);
-      // Don't throw - keep the app working with local state
+      console.error('[VVIJ] Network error:', err);
     }
   }, []);
 
