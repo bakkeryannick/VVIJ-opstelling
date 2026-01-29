@@ -648,6 +648,8 @@ export function useMatchState() {
     opponentName: string | null = null
   ) => {
     const matchName = opponentName ? `VVIJ Zo 2 - ${opponentName}` : null;
+
+    // First save core match data (without match_name to avoid column issues)
     await updateMatchState({
       formation,
       field_positions: {},
@@ -656,8 +658,18 @@ export function useMatchState() {
       timer: DEFAULT_TIMER,
       player_times: {},
       flag_player: null,
-      match_name: matchName,
     });
+
+    // Then try to save match_name separately (may fail if column doesn't exist yet)
+    try {
+      await supabase
+        .from('match_state')
+        .update({ match_name: matchName })
+        .eq('id', MATCH_ID);
+      setMatchState(prev => prev ? { ...prev, match_name: matchName } : null);
+    } catch {
+      console.warn('Could not save match_name - column may not exist');
+    }
   }, [updateMatchState]);
 
   // Clear/end the current match
@@ -670,8 +682,18 @@ export function useMatchState() {
       timer: DEFAULT_TIMER,
       player_times: {},
       flag_player: null,
-      match_name: null,
     });
+
+    // Try to clear match_name separately
+    try {
+      await supabase
+        .from('match_state')
+        .update({ match_name: null })
+        .eq('id', MATCH_ID);
+      setMatchState(prev => prev ? { ...prev, match_name: null } : null);
+    } catch {
+      // Column may not exist
+    }
   }, [updateMatchState]);
 
   // Add player to present players (goes to bench)

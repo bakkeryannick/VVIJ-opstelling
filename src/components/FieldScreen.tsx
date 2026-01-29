@@ -28,6 +28,7 @@ interface FieldScreenProps {
   onMoveToBench: (playerId: string) => void;
   onAssignToFlag: (playerId: string) => void;
   onNewMatch: () => void;
+  onHome: () => void;
   onManagePlayers: () => void;
   onStartTimer: () => void;
   onPauseTimer: () => void;
@@ -47,6 +48,7 @@ export function FieldScreen({
   onMoveToBench,
   onAssignToFlag,
   onNewMatch,
+  onHome,
   onManagePlayers,
   onStartTimer,
   onPauseTimer,
@@ -177,6 +179,18 @@ export function FieldScreen({
               onClick={() => setShowMenu(false)}
             />
             <div className="absolute right-4 top-14 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-40 min-w-[180px]">
+              <button
+                onClick={() => {
+                  setShowMenu(false);
+                  onHome();
+                }}
+                className="w-full px-4 py-2 text-left text-gray-700 hover:bg-gray-50 flex items-center gap-3"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-4 0h4" />
+                </svg>
+                Startscherm
+              </button>
               <button
                 onClick={() => {
                   setShowMenu(false);

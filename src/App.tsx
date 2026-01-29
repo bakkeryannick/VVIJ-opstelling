@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { PinScreen, checkPinVerified } from './components/PinScreen';
 import { HomeScreen } from './components/HomeScreen';
 import { PlayerSelect } from './components/PlayerSelect';
@@ -10,9 +10,17 @@ import { useMatchState } from './hooks/useMatchState';
 import type { AppView, Formation } from './types';
 
 function App() {
-  const [view, setView] = useState<AppView>(() =>
-    checkPinVerified() ? 'home' : 'pin'
-  );
+  const [view, setView] = useState<AppView>(() => {
+    if (!checkPinVerified()) return 'pin';
+    const saved = localStorage.getItem('vvij-current-view');
+    if (saved === 'field' || saved === 'match-stats') return saved;
+    return 'home';
+  });
+
+  // Persist view state so the app returns to the correct screen on reload
+  useEffect(() => {
+    localStorage.setItem('vvij-current-view', view);
+  }, [view]);
   const [confirmNewMatch, setConfirmNewMatch] = useState(false);
   const [confirmClearMatch, setConfirmClearMatch] = useState(false);
 
@@ -202,6 +210,7 @@ function App() {
           onMoveToBench={movePlayerToBench}
           onAssignToFlag={assignPlayerToFlag}
           onNewMatch={handleNewMatchClick}
+          onHome={() => setView('home')}
           onManagePlayers={() => setView('manage-players')}
           onStartTimer={startTimer}
           onPauseTimer={pauseTimer}
