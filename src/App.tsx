@@ -14,6 +14,7 @@ function App() {
     checkPinVerified() ? 'home' : 'pin'
   );
   const [confirmNewMatch, setConfirmNewMatch] = useState(false);
+  const [confirmClearMatch, setConfirmClearMatch] = useState(false);
 
   const { players, loading: playersLoading, addPlayer, removePlayer } = usePlayers();
   const {
@@ -23,6 +24,7 @@ function App() {
     assignPlayerToPosition,
     movePlayerToBench,
     startNewMatch,
+    clearMatch,
     startTimer,
     pauseTimer,
     resetTimer,
@@ -60,7 +62,11 @@ function App() {
     formation: Formation,
     opponentName: string | null
   ) => {
-    await startNewMatch(presentPlayerIds, formation, opponentName);
+    try {
+      await startNewMatch(presentPlayerIds, formation, opponentName);
+    } catch (err) {
+      console.error('Start match error:', err);
+    }
     setView('field');
   };
 
@@ -77,6 +83,40 @@ function App() {
             <span className="text-white text-xl font-bold">VVIJ</span>
           </div>
           <p className="text-gray-500">Laden...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Confirm dialog for clearing match
+  if (confirmClearMatch) {
+    return (
+      <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
+        <div className="bg-white rounded-lg shadow-lg p-6 max-w-sm w-full">
+          <h2 className="text-lg font-semibold text-gray-800 mb-2">
+            Wedstrijd verwijderen?
+          </h2>
+          <p className="text-gray-600 mb-6">
+            De huidige wedstrijd, opstelling en speeltijden worden gewist. Dit kan niet ongedaan worden.
+          </p>
+          <div className="flex gap-3">
+            <button
+              onClick={() => setConfirmClearMatch(false)}
+              className="flex-1 py-2 px-4 bg-gray-100 text-gray-700 font-medium rounded-lg hover:bg-gray-200 transition-colors"
+            >
+              Annuleren
+            </button>
+            <button
+              onClick={async () => {
+                try { await clearMatch(); } catch (err) { console.error(err); }
+                setConfirmClearMatch(false);
+                setView('home');
+              }}
+              className="flex-1 py-2 px-4 bg-red-600 text-white font-medium rounded-lg hover:bg-red-700 transition-colors"
+            >
+              Verwijderen
+            </button>
+          </div>
         </div>
       </div>
     );
@@ -124,6 +164,7 @@ function App() {
           onNewMatch={handleNewMatchClick}
           onContinueMatch={() => setView('field')}
           onManagePlayers={() => setView('manage-players')}
+          onClearMatch={() => setConfirmClearMatch(true)}
         />
       );
 

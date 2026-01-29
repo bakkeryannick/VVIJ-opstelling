@@ -6,6 +6,7 @@ interface HomeScreenProps {
   onNewMatch: () => void;
   onContinueMatch: () => void;
   onManagePlayers: () => void;
+  onClearMatch: () => void;
 }
 
 export function HomeScreen({
@@ -14,6 +15,7 @@ export function HomeScreen({
   onNewMatch,
   onContinueMatch,
   onManagePlayers,
+  onClearMatch,
 }: HomeScreenProps) {
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col items-center justify-center p-4">
@@ -58,6 +60,15 @@ export function HomeScreen({
           >
             Spelers beheren
           </button>
+
+          {hasCurrentMatch && (
+            <button
+              onClick={onClearMatch}
+              className="w-full py-3 text-red-500 font-medium text-sm hover:text-red-700 transition-colors"
+            >
+              Wedstrijd verwijderen
+            </button>
+          )}
         </div>
 
         {/* Footer */}

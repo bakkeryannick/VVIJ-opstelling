@@ -660,6 +660,20 @@ export function useMatchState() {
     });
   }, [updateMatchState]);
 
+  // Clear/end the current match
+  const clearMatch = useCallback(async () => {
+    await updateMatchState({
+      formation: '4-3-3',
+      field_positions: {},
+      bench_players: [],
+      present_players: [],
+      timer: DEFAULT_TIMER,
+      player_times: {},
+      flag_player: null,
+      match_name: null,
+    });
+  }, [updateMatchState]);
+
   // Add player to present players (goes to bench)
   const addPlayerToMatch = useCallback(async (playerId: string) => {
     if (!matchState) return;
@@ -779,6 +793,7 @@ export function useMatchState() {
     assignPlayerToPosition,
     movePlayerToBench,
     startNewMatch,
+    clearMatch,
     updatePositionOffset,
     refetch: fetchMatchState,
     // Timer functions
