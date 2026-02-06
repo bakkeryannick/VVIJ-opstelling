@@ -651,7 +651,7 @@ export function useMatchState() {
   ) => {
     const matchName = opponentName ? `VVIJ Zo 2 - ${opponentName}` : null;
 
-    // First save core match data (without match_name to avoid column issues)
+    // First save core match data (without match_name/player_availability to avoid column issues)
     await updateMatchState({
       formation,
       field_positions: {},
@@ -660,18 +660,25 @@ export function useMatchState() {
       timer: DEFAULT_TIMER,
       player_times: {},
       flag_player: null,
-      player_availability: availability,
     });
 
-    // Then try to save match_name separately (may fail if column doesn't exist yet)
+    // Then try to save optional columns separately (may fail if columns don't exist yet)
     try {
       await supabase
         .from('match_state')
-        .update({ match_name: matchName })
+        .update({ match_name: matchName, player_availability: availability })
         .eq('id', MATCH_ID);
-      setMatchState(prev => prev ? { ...prev, match_name: matchName } : null);
+      setMatchState(prev => prev ? { ...prev, match_name: matchName, player_availability: availability } : null);
     } catch {
-      console.warn('Could not save match_name - column may not exist');
+      // Columns may not exist, try them individually
+      try {
+        await supabase.from('match_state').update({ match_name: matchName }).eq('id', MATCH_ID);
+        setMatchState(prev => prev ? { ...prev, match_name: matchName } : null);
+      } catch { /* column may not exist */ }
+      try {
+        await supabase.from('match_state').update({ player_availability: availability }).eq('id', MATCH_ID);
+        setMatchState(prev => prev ? { ...prev, player_availability: availability } : null);
+      } catch { /* column may not exist */ }
     }
   }, [updateMatchState]);
 
@@ -685,18 +692,17 @@ export function useMatchState() {
       timer: DEFAULT_TIMER,
       player_times: {},
       flag_player: null,
-      player_availability: {},
     });
 
-    // Try to clear match_name separately
+    // Try to clear optional columns separately
     try {
       await supabase
         .from('match_state')
-        .update({ match_name: null })
+        .update({ match_name: null, player_availability: {} })
         .eq('id', MATCH_ID);
-      setMatchState(prev => prev ? { ...prev, match_name: null } : null);
+      setMatchState(prev => prev ? { ...prev, match_name: null, player_availability: {} } : null);
     } catch {
-      // Column may not exist
+      // Columns may not exist
     }
   }, [updateMatchState]);
 
