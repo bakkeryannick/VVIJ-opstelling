@@ -12,14 +12,16 @@ import type { AppView, Formation } from './types';
 function App() {
   const [view, setView] = useState<AppView>(() => {
     if (!checkPinVerified()) return 'pin';
-    const saved = localStorage.getItem('vvij-current-view');
-    if (saved === 'field' || saved === 'match-stats') return saved;
+    try {
+      const saved = localStorage.getItem('vvij-current-view');
+      if (saved === 'field' || saved === 'match-stats') return saved;
+    } catch { /* localStorage unavailable */ }
     return 'home';
   });
 
   // Persist view state so the app returns to the correct screen on reload
   useEffect(() => {
-    localStorage.setItem('vvij-current-view', view);
+    try { localStorage.setItem('vvij-current-view', view); } catch { /* ignore */ }
   }, [view]);
   const [confirmNewMatch, setConfirmNewMatch] = useState(false);
   const [confirmClearMatch, setConfirmClearMatch] = useState(false);
@@ -79,7 +81,11 @@ function App() {
   };
 
   const handleFormationChange = async (formation: Formation) => {
-    await setFormation(formation);
+    try {
+      await setFormation(formation);
+    } catch (err) {
+      console.error('Formation change error:', err);
+    }
   };
 
   // Show loading while data is being fetched

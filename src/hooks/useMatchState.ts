@@ -276,7 +276,9 @@ export function useMatchState() {
               updated_at: new Date().toISOString()
             })
             .eq('id', MATCH_ID)
-            .then();
+            .then(({ error }) => {
+              if (error) console.error('Position offset update error:', error);
+            });
         }
         return prev;
       });

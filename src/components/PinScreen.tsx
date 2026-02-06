@@ -19,7 +19,7 @@ export function PinScreen({ onSuccess }: PinScreenProps) {
 
     if (value.length === 4) {
       if (value === CORRECT_PIN) {
-        localStorage.setItem(PIN_STORAGE_KEY, 'true');
+        try { localStorage.setItem(PIN_STORAGE_KEY, 'true'); } catch { /* ignore */ }
         onSuccess();
       } else {
         setError(true);
@@ -138,5 +138,9 @@ export function PinScreen({ onSuccess }: PinScreenProps) {
 }
 
 export function checkPinVerified(): boolean {
-  return localStorage.getItem(PIN_STORAGE_KEY) === 'true';
+  try {
+    return localStorage.getItem(PIN_STORAGE_KEY) === 'true';
+  } catch {
+    return false;
+  }
 }
