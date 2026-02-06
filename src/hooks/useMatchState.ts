@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '../lib/supabase';
-import type { MatchState, Formation, FieldPositions, PositionOffset, PlayerPlayTime, MatchTimer } from '../types';
+import type { MatchState, Formation, FieldPositions, PositionOffset, PlayerPlayTime, MatchTimer, Availability } from '../types';
 import { mapPlayersToNewFormation, getPositionIds } from '../lib/formations';
 
 const MATCH_ID = 'current';
@@ -73,13 +73,14 @@ export function useMatchState() {
 
       if (error) throw error;
 
-      // Ensure timer, player_times, flag_player and match_name exist (for backwards compatibility)
+      // Ensure timer, player_times, flag_player, match_name and player_availability exist (for backwards compatibility)
       const stateWithTimer: MatchState = {
         ...data,
         timer: data.timer || DEFAULT_TIMER,
         player_times: data.player_times || {},
         flag_player: data.flag_player || null,
         match_name: data.match_name || null,
+        player_availability: data.player_availability || {},
       };
 
       setMatchState(stateWithTimer);
@@ -645,7 +646,8 @@ export function useMatchState() {
   const startNewMatch = useCallback(async (
     presentPlayerIds: string[],
     formation: Formation,
-    opponentName: string | null = null
+    opponentName: string | null = null,
+    availability: Record<string, Availability> = {}
   ) => {
     const matchName = opponentName ? `VVIJ Zo 2 - ${opponentName}` : null;
 
@@ -658,6 +660,7 @@ export function useMatchState() {
       timer: DEFAULT_TIMER,
       player_times: {},
       flag_player: null,
+      player_availability: availability,
     });
 
     // Then try to save match_name separately (may fail if column doesn't exist yet)
@@ -682,6 +685,7 @@ export function useMatchState() {
       timer: DEFAULT_TIMER,
       player_times: {},
       flag_player: null,
+      player_availability: {},
     });
 
     // Try to clear match_name separately
@@ -787,13 +791,14 @@ export function useMatchState() {
         { event: 'UPDATE', schema: 'public', table: 'match_state' },
         (payload) => {
           const newState = payload.new as MatchState;
-          // Ensure timer, player_times, flag_player and match_name exist
+          // Ensure timer, player_times, flag_player, match_name and player_availability exist
           setMatchState({
             ...newState,
             timer: newState.timer || DEFAULT_TIMER,
             player_times: newState.player_times || {},
             flag_player: newState.flag_player || null,
             match_name: newState.match_name || null,
+            player_availability: newState.player_availability || {},
           });
         }
       )

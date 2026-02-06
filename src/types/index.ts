@@ -40,6 +40,8 @@ export interface MatchTimer {
   elapsedBeforePause: number;  // Tijd in seconden voor pauze
 }
 
+export type Availability = '25' | '45' | '70' | '90';
+
 export interface MatchState {
   id: string;
   formation: Formation;
@@ -55,6 +57,8 @@ export interface MatchState {
   flag_player: string | null;
   // Wedstrijdnaam (optioneel)
   match_name: string | null;
+  // Beschikbaarheid per speler (playerId -> Availability)
+  player_availability: Record<string, Availability>;
 }
 
 export interface FormationConfig {

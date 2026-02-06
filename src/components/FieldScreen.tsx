@@ -249,6 +249,7 @@ export function FieldScreen({
           <Bench
             players={presentPlayers}
             benchPlayerIds={matchState.bench_players}
+            playerAvailability={matchState.player_availability}
             onManageClick={() => setShowPlayerManager(true)}
           />
         </div>

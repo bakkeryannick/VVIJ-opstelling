@@ -1,14 +1,22 @@
 import { useDroppable } from '@dnd-kit/core';
 import { PlayerBadge } from './PlayerBadge';
-import type { Player } from '../types';
+import type { Player, Availability } from '../types';
+
+const availabilityLabel: Record<Availability, string> = {
+  '25': '¼',
+  '45': '½',
+  '70': '¾',
+  '90': '90\'',
+};
 
 interface BenchProps {
   players: Player[];
   benchPlayerIds: string[];
+  playerAvailability?: Record<string, Availability>;
   onManageClick?: () => void;
 }
 
-export function Bench({ players, benchPlayerIds, onManageClick }: BenchProps) {
+export function Bench({ players, benchPlayerIds, playerAvailability, onManageClick }: BenchProps) {
   const { isOver, setNodeRef } = useDroppable({
     id: 'bench',
     data: { isBench: true },
@@ -52,17 +60,25 @@ export function Bench({ players, benchPlayerIds, onManageClick }: BenchProps) {
         </div>
       </div>
 
-      <div className="flex gap-2 overflow-x-auto pb-2 -mx-2 px-2">
+      <div className="flex flex-wrap gap-2">
         {benchPlayers.length === 0 ? (
           <p className="text-gray-400 text-sm py-2">
             Alle spelers staan op het veld
           </p>
         ) : (
-          benchPlayers.map(player => (
-            <div key={player.id} className="flex-shrink-0">
-              <PlayerBadge id={player.id} name={player.name} />
-            </div>
-          ))
+          benchPlayers.map(player => {
+            const avail = playerAvailability?.[player.id];
+            return (
+              <div key={player.id} className="flex flex-col items-center gap-0.5">
+                <PlayerBadge id={player.id} name={player.name} />
+                {avail && avail !== '90' && (
+                  <span className="text-[10px] font-medium text-gray-500">
+                    {availabilityLabel[avail]}
+                  </span>
+                )}
+              </div>
+            );
+          })
         )}
       </div>
     </div>

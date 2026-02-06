@@ -1,11 +1,18 @@
 import { useState } from 'react';
-import type { Player, Formation } from '../types';
+import type { Player, Formation, Availability } from '../types';
 
 interface PlayerSelectProps {
   players: Player[];
-  onStart: (presentPlayerIds: string[], formation: Formation, opponentName: string | null) => void;
+  onStart: (presentPlayerIds: string[], formation: Formation, opponentName: string | null, availability: Record<string, Availability>) => void;
   onCancel: () => void;
 }
+
+const availabilityOptions: { value: Availability; label: string }[] = [
+  { value: '25', label: '¼' },
+  { value: '45', label: '½' },
+  { value: '70', label: '¾' },
+  { value: '90', label: '90\'' },
+];
 
 const formations: { id: Formation; label: string }[] = [
   { id: '4-3-3', label: '4-3-3' },
@@ -17,29 +24,41 @@ export function PlayerSelect({ players, onStart, onCancel }: PlayerSelectProps) 
   const [selectedPlayers, setSelectedPlayers] = useState<Set<string>>(new Set());
   const [formation, setFormation] = useState<Formation>('4-3-3');
   const [opponentName, setOpponentName] = useState('');
+  const [availability, setAvailability] = useState<Record<string, Availability>>({});
 
   const togglePlayer = (playerId: string) => {
     setSelectedPlayers(prev => {
       const next = new Set(prev);
       if (next.has(playerId)) {
         next.delete(playerId);
+        setAvailability(a => {
+          const copy = { ...a };
+          delete copy[playerId];
+          return copy;
+        });
       } else {
         next.add(playerId);
+        setAvailability(a => ({ ...a, [playerId]: '90' }));
       }
       return next;
     });
   };
 
   const selectAll = () => {
-    setSelectedPlayers(new Set(players.map(p => p.id)));
+    const all = new Set(players.map(p => p.id));
+    setSelectedPlayers(all);
+    const newAvail: Record<string, Availability> = {};
+    players.forEach(p => { newAvail[p.id] = availability[p.id] || '90'; });
+    setAvailability(newAvail);
   };
 
   const selectNone = () => {
     setSelectedPlayers(new Set());
+    setAvailability({});
   };
 
   const handleStart = () => {
-    onStart(Array.from(selectedPlayers), formation, opponentName.trim() || null);
+    onStart(Array.from(selectedPlayers), formation, opponentName.trim() || null, availability);
   };
 
   return (
@@ -118,20 +137,39 @@ export function PlayerSelect({ players, onStart, onCancel }: PlayerSelectProps) 
             </div>
           </div>
           <div className="divide-y divide-gray-100 max-h-[50vh] overflow-auto">
-            {players.map(player => (
-              <label
-                key={player.id}
-                className="flex items-center px-4 py-3 cursor-pointer hover:bg-gray-50 active:bg-gray-100"
-              >
-                <input
-                  type="checkbox"
-                  checked={selectedPlayers.has(player.id)}
-                  onChange={() => togglePlayer(player.id)}
-                  className="w-5 h-5 rounded border-gray-300 text-red-600 focus:ring-red-500"
-                />
-                <span className="ml-3 text-gray-800">{player.name}</span>
-              </label>
-            ))}
+            {players.map(player => {
+              const isSelected = selectedPlayers.has(player.id);
+              return (
+                <div key={player.id} className="flex items-center px-4 py-3 gap-3">
+                  <label className="flex items-center flex-1 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={isSelected}
+                      onChange={() => togglePlayer(player.id)}
+                      className="w-5 h-5 rounded border-gray-300 text-red-600 focus:ring-red-500"
+                    />
+                    <span className="ml-3 text-gray-800">{player.name}</span>
+                  </label>
+                  {isSelected && (
+                    <div className="flex gap-1">
+                      {availabilityOptions.map(opt => (
+                        <button
+                          key={opt.value}
+                          onClick={() => setAvailability(a => ({ ...a, [player.id]: opt.value }))}
+                          className={`w-8 h-7 text-xs font-medium rounded transition-colors ${
+                            availability[player.id] === opt.value
+                              ? 'bg-red-600 text-white'
+                              : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                          }`}
+                        >
+                          {opt.label}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
         </div>
       </div>

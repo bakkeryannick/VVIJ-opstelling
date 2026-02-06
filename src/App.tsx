@@ -7,7 +7,7 @@ import { FieldScreen } from './components/FieldScreen';
 import { MatchStats } from './components/MatchStats';
 import { usePlayers } from './hooks/usePlayers';
 import { useMatchState } from './hooks/useMatchState';
-import type { AppView, Formation } from './types';
+import type { AppView, Formation, Availability } from './types';
 
 function App() {
   const [view, setView] = useState<AppView>(() => {
@@ -70,10 +70,11 @@ function App() {
   const handleStartMatch = async (
     presentPlayerIds: string[],
     formation: Formation,
-    opponentName: string | null
+    opponentName: string | null,
+    availability: Record<string, Availability> = {}
   ) => {
     try {
-      await startNewMatch(presentPlayerIds, formation, opponentName);
+      await startNewMatch(presentPlayerIds, formation, opponentName, availability);
     } catch (err) {
       console.error('Start match error:', err);
     }
