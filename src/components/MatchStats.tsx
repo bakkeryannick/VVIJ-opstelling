@@ -1,6 +1,14 @@
 import { useState, useEffect } from 'react';
-import type { MatchState, Player, MatchTimer, PlayerPlayTime } from '../types';
+import type { MatchState, Player, MatchTimer, PlayerPlayTime, Availability } from '../types';
 import { getPositionIds } from '../lib/formations';
+import { getTrafficLight, type TrafficLightStatus } from '../lib/trafficLight';
+
+const TRAFFIC_COLORS: Record<TrafficLightStatus, string> = {
+  green: 'bg-green-500',
+  orange: 'bg-amber-500',
+  red: 'bg-red-500',
+  none: 'bg-red-500',
+};
 
 interface MatchStatsProps {
   matchState: MatchState;
@@ -23,6 +31,8 @@ interface PlayerStat {
   flagTime: number;
   isOnField: boolean;
   isFlag: boolean;
+  availability?: Availability;
+  trafficLight: TrafficLightStatus;
 }
 
 export function MatchStats({
@@ -54,13 +64,19 @@ export function MatchStats({
       const onField = getPlayersOnField();
       const presentPlayers = players.filter(p => matchState.present_players.includes(p.id));
 
-      const playerStats: PlayerStat[] = presentPlayers.map(player => ({
-        player,
-        playTime: getPlayerPlayTime(matchState.player_times[player.id], matchState.timer),
-        flagTime: getPlayerFlagTime(matchState.player_times[player.id], matchState.timer),
-        isOnField: onField.has(player.id),
-        isFlag: matchState.flag_player === player.id,
-      }));
+      const playerStats: PlayerStat[] = presentPlayers.map(player => {
+        const playTime = getPlayerPlayTime(matchState.player_times[player.id], matchState.timer);
+        const avail = matchState.player_availability?.[player.id];
+        return {
+          player,
+          playTime,
+          flagTime: getPlayerFlagTime(matchState.player_times[player.id], matchState.timer),
+          isOnField: onField.has(player.id),
+          isFlag: matchState.flag_player === player.id,
+          availability: avail,
+          trafficLight: getTrafficLight(playTime, avail),
+        };
+      });
 
       // Sort by play time descending
       playerStats.sort((a, b) => b.playTime - a.playTime);
@@ -141,14 +157,18 @@ export function MatchStats({
             <h2 className="text-sm font-medium text-gray-700">Speeltijd per speler</h2>
           </div>
           <div className="divide-y divide-gray-100">
-            {stats.map(({ player, playTime, flagTime, isOnField, isFlag }) => {
+            {stats.map(({ player, playTime, flagTime, isOnField, isFlag, availability, trafficLight }) => {
               const percentage = matchTime > 0 ? (playTime / matchTime) * 100 : 0;
               const barWidth = maxPlayTime > 0 ? (playTime / maxPlayTime) * 100 : 0;
+              const desiredSec = availability ? parseInt(availability) * 60 : undefined;
 
               return (
                 <div key={player.id} className="px-4 py-3">
                   <div className="flex items-center justify-between mb-1">
                     <div className="flex items-center gap-2">
+                      {trafficLight !== 'none' && (
+                        <span className={`w-2.5 h-2.5 rounded-full ${TRAFFIC_COLORS[trafficLight]}`} />
+                      )}
                       <span className="font-medium text-gray-800">{player.name}</span>
                       {isOnField && (
                         <span className="px-1.5 py-0.5 bg-green-100 text-green-700 text-xs rounded-full">
@@ -165,18 +185,29 @@ export function MatchStats({
                       <span className="font-mono font-semibold text-gray-900">
                         {formatTime(playTime)}
                       </span>
-                      <span className="text-xs text-gray-500 ml-2">
-                        ({Math.round(percentage)}%)
-                      </span>
+                      {desiredSec ? (
+                        <span className="text-xs text-gray-500 ml-2">
+                          / {formatTime(desiredSec)}
+                        </span>
+                      ) : (
+                        <span className="text-xs text-gray-500 ml-2">
+                          ({Math.round(percentage)}%)
+                        </span>
+                      )}
                     </div>
                   </div>
-                  <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+                  <div className="h-2 bg-gray-100 rounded-full overflow-hidden relative">
                     <div
-                      className={`h-full rounded-full transition-all duration-300 ${
-                        isOnField ? 'bg-green-500' : 'bg-red-500'
-                      }`}
+                      className={`h-full rounded-full transition-all duration-300 ${TRAFFIC_COLORS[trafficLight]}`}
                       style={{ width: `${barWidth}%` }}
                     />
+                    {/* Desired time marker */}
+                    {desiredSec && maxPlayTime > 0 && (
+                      <div
+                        className="absolute top-0 h-full w-0.5 bg-gray-400"
+                        style={{ left: `${Math.min((desiredSec / maxPlayTime) * 100, 100)}%` }}
+                      />
+                    )}
                   </div>
                   {/* Flag time indicator */}
                   {flagTime > 0 && (

@@ -651,7 +651,6 @@ export function useMatchState() {
   ) => {
     const matchName = opponentName ? `VVIJ Zo 2 - ${opponentName}` : null;
 
-    // First save core match data (without match_name/player_availability to avoid column issues)
     await updateMatchState({
       formation,
       field_positions: {},
@@ -660,26 +659,9 @@ export function useMatchState() {
       timer: DEFAULT_TIMER,
       player_times: {},
       flag_player: null,
+      match_name: matchName,
+      player_availability: availability,
     });
-
-    // Then try to save optional columns separately (may fail if columns don't exist yet)
-    try {
-      await supabase
-        .from('match_state')
-        .update({ match_name: matchName, player_availability: availability })
-        .eq('id', MATCH_ID);
-      setMatchState(prev => prev ? { ...prev, match_name: matchName, player_availability: availability } : null);
-    } catch {
-      // Columns may not exist, try them individually
-      try {
-        await supabase.from('match_state').update({ match_name: matchName }).eq('id', MATCH_ID);
-        setMatchState(prev => prev ? { ...prev, match_name: matchName } : null);
-      } catch { /* column may not exist */ }
-      try {
-        await supabase.from('match_state').update({ player_availability: availability }).eq('id', MATCH_ID);
-        setMatchState(prev => prev ? { ...prev, player_availability: availability } : null);
-      } catch { /* column may not exist */ }
-    }
   }, [updateMatchState]);
 
   // Clear/end the current match
@@ -692,18 +674,9 @@ export function useMatchState() {
       timer: DEFAULT_TIMER,
       player_times: {},
       flag_player: null,
+      match_name: null,
+      player_availability: {},
     });
-
-    // Try to clear optional columns separately
-    try {
-      await supabase
-        .from('match_state')
-        .update({ match_name: null, player_availability: {} })
-        .eq('id', MATCH_ID);
-      setMatchState(prev => prev ? { ...prev, match_name: null, player_availability: {} } : null);
-    } catch {
-      // Columns may not exist
-    }
   }, [updateMatchState]);
 
   // Add player to present players (goes to bench)
@@ -797,14 +770,19 @@ export function useMatchState() {
         { event: 'UPDATE', schema: 'public', table: 'match_state' },
         (payload) => {
           const newState = payload.new as MatchState;
-          // Ensure timer, player_times, flag_player, match_name and player_availability exist
-          setMatchState({
-            ...newState,
-            timer: newState.timer || DEFAULT_TIMER,
-            player_times: newState.player_times || {},
-            flag_player: newState.flag_player || null,
-            match_name: newState.match_name || null,
-            player_availability: newState.player_availability || {},
+          // Merge with previous state to preserve data that may not be in the realtime payload
+          setMatchState(prev => {
+            const hasAvailability = newState.player_availability && Object.keys(newState.player_availability).length > 0;
+            return {
+              ...newState,
+              timer: newState.timer || DEFAULT_TIMER,
+              player_times: newState.player_times || {},
+              flag_player: newState.flag_player ?? null,
+              match_name: newState.match_name ?? prev?.match_name ?? null,
+              player_availability: hasAvailability
+                ? newState.player_availability
+                : (prev?.player_availability || {}),
+            };
           });
         }
       )

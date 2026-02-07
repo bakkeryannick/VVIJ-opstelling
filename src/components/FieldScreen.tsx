@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import {
   DndContext,
   DragOverlay,
@@ -18,6 +18,7 @@ import { PlayerBadgeOverlay } from './PlayerBadge';
 import { MatchTimer } from './MatchTimer';
 import { PlayerManager } from './PlayerManager';
 import type { Formation, MatchState, Player } from '../types';
+import { getTrafficLight, calcPlayerPlayTime, type TrafficLightStatus } from '../lib/trafficLight';
 
 interface FieldScreenProps {
   matchState: MatchState;
@@ -67,6 +68,23 @@ export function FieldScreen({
   } | null>(null);
   const [showMenu, setShowMenu] = useState(false);
   const [showPlayerManager, setShowPlayerManager] = useState(false);
+  const [, setTick] = useState(0);
+
+  // Tick every second when timer is running for traffic light updates
+  useEffect(() => {
+    if (!matchState.timer?.isRunning) return;
+    const interval = setInterval(() => setTick(t => t + 1), 1000);
+    return () => clearInterval(interval);
+  }, [matchState.timer?.isRunning]);
+
+  // Compute traffic light status for all present players (recomputes on each tick)
+  const trafficLights: Record<string, TrafficLightStatus> = {};
+  for (const playerId of matchState.present_players) {
+    const avail = matchState.player_availability?.[playerId];
+    if (!avail) continue;
+    const played = calcPlayerPlayTime(matchState.player_times?.[playerId], matchState.timer);
+    trafficLights[playerId] = getTrafficLight(played, avail);
+  }
 
   const mouseSensor = useSensor(MouseSensor, {
     activationConstraint: {
@@ -239,6 +257,7 @@ export function FieldScreen({
                 formation={matchState.formation}
                 fieldPositions={matchState.field_positions}
                 players={presentPlayers}
+                trafficLights={trafficLights}
               />
             </div>
           </div>
@@ -250,6 +269,8 @@ export function FieldScreen({
             players={presentPlayers}
             benchPlayerIds={matchState.bench_players}
             playerAvailability={matchState.player_availability}
+            playerTimes={matchState.player_times}
+            timer={matchState.timer}
             onManageClick={() => setShowPlayerManager(true)}
           />
         </div>
@@ -261,6 +282,7 @@ export function FieldScreen({
               name={activePlayer.name}
               isOnField={activePlayer.isOnField}
               isFlag={activePlayer.isFlag}
+              trafficLight={trafficLights[activePlayer.id]}
             />
           ) : null}
         </DragOverlay>

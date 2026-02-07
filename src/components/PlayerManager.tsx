@@ -1,6 +1,14 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import type { Player, MatchState } from '../types';
 import { getPositionIds } from '../lib/formations';
+import { getTrafficLight, calcPlayerPlayTime, formatMinutes, type TrafficLightStatus } from '../lib/trafficLight';
+
+const TRAFFIC_DOT_COLOR: Record<TrafficLightStatus, string> = {
+  green: 'bg-green-500',
+  orange: 'bg-amber-500',
+  red: 'bg-red-500',
+  none: '',
+};
 
 interface PlayerManagerProps {
   isOpen: boolean;
@@ -25,8 +33,17 @@ export function PlayerManager({
   const [isCreating, setIsCreating] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [confirmRemove, setConfirmRemove] = useState<string | null>(null);
+  const [, setTick] = useState(0);
+
+  useEffect(() => {
+    if (!isOpen || !matchState.timer?.isRunning) return;
+    const interval = setInterval(() => setTick(t => t + 1), 1000);
+    return () => clearInterval(interval);
+  }, [isOpen, matchState.timer?.isRunning]);
 
   if (!isOpen) return null;
+
+  const hasTimerData = matchState.timer && (matchState.timer.elapsedBeforePause > 0 || matchState.timer.isRunning);
 
   // Check if player is on field
   const isPlayerOnField = (playerId: string): boolean => {
@@ -183,6 +200,9 @@ export function PlayerManager({
             {players.map(player => {
               const isPresent = isPlayerPresent(player.id);
               const onField = isPlayerOnField(player.id);
+              const avail = matchState.player_availability?.[player.id];
+              const playedSec = calcPlayerPlayTime(matchState.player_times?.[player.id], matchState.timer);
+              const tl = getTrafficLight(playedSec, avail);
 
               return (
                 <button
@@ -195,6 +215,21 @@ export function PlayerManager({
                     {onField && (
                       <span className="px-1.5 py-0.5 bg-green-100 text-green-700 text-xs rounded-full">
                         op veld
+                      </span>
+                    )}
+                    {isPresent && avail && hasTimerData && (
+                      <div className="flex items-center gap-1">
+                        {tl !== 'none' && (
+                          <span className={`w-2 h-2 rounded-full ${TRAFFIC_DOT_COLOR[tl]}`} />
+                        )}
+                        <span className="text-xs text-gray-500">
+                          {formatMinutes(playedSec)}/{avail}'
+                        </span>
+                      </div>
+                    )}
+                    {isPresent && avail && !hasTimerData && (
+                      <span className="text-xs text-gray-400">
+                        {avail}'
                       </span>
                     )}
                   </div>

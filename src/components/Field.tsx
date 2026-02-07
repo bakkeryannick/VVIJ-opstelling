@@ -1,16 +1,18 @@
 import { forwardRef } from 'react';
 import { FieldPosition } from './FieldPosition';
 import type { Formation, FieldPositions, Player, PositionId } from '../types';
+import type { TrafficLightStatus } from '../lib/trafficLight';
 import { getFormationPositions } from '../lib/formations';
 
 interface FieldProps {
   formation: Formation;
   fieldPositions: FieldPositions;
   players: Player[];
+  trafficLights?: Record<string, TrafficLightStatus>;
 }
 
 export const Field = forwardRef<HTMLDivElement, FieldProps>(
-  ({ formation, fieldPositions, players }, ref) => {
+  ({ formation, fieldPositions, players, trafficLights }, ref) => {
     const positions = getFormationPositions(formation);
     const offsets = fieldPositions.position_offsets || {};
 
@@ -190,6 +192,7 @@ export const Field = forwardRef<HTMLDivElement, FieldProps>(
               offsetY={offset.y}
               playerId={player?.id}
               playerName={player?.name}
+              trafficLight={player ? trafficLights?.[player.id] : undefined}
             />
           );
         })}

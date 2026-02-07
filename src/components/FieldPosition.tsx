@@ -1,5 +1,6 @@
 import { useDroppable } from '@dnd-kit/core';
 import { PlayerBadge } from './PlayerBadge';
+import type { TrafficLightStatus } from '../lib/trafficLight';
 
 interface FieldPositionProps {
   id: string;
@@ -10,6 +11,7 @@ interface FieldPositionProps {
   offsetY?: number;
   playerId?: string;
   playerName?: string;
+  trafficLight?: TrafficLightStatus;
 }
 
 export function FieldPosition({
@@ -21,6 +23,7 @@ export function FieldPosition({
   offsetY = 0,
   playerId,
   playerName,
+  trafficLight,
 }: FieldPositionProps) {
   const { isOver, setNodeRef } = useDroppable({
     id: `position-${id}`,
@@ -50,7 +53,7 @@ export function FieldPosition({
       }}
     >
       {playerId && playerName ? (
-        <PlayerBadge id={playerId} name={playerName} isOnField />
+        <PlayerBadge id={playerId} name={playerName} isOnField trafficLight={trafficLight} />
       ) : (
         <div
           className={`

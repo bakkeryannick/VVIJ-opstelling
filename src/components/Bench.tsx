@@ -1,30 +1,46 @@
+import { useState, useEffect } from 'react';
 import { useDroppable } from '@dnd-kit/core';
 import { PlayerBadge } from './PlayerBadge';
-import type { Player, Availability } from '../types';
+import type { Player, Availability, MatchTimer as MatchTimerType, PlayerPlayTime } from '../types';
+import { getTrafficLight, calcPlayerPlayTime, formatMinutes, type TrafficLightStatus } from '../lib/trafficLight';
 
-const availabilityLabel: Record<Availability, string> = {
-  '25': '¼',
-  '45': '½',
-  '70': '¾',
-  '90': '90\'',
+const TRAFFIC_DOT_COLOR: Record<TrafficLightStatus, string> = {
+  green: 'bg-green-500',
+  orange: 'bg-amber-500',
+  red: 'bg-red-500',
+  none: '',
 };
 
 interface BenchProps {
   players: Player[];
   benchPlayerIds: string[];
   playerAvailability?: Record<string, Availability>;
+  playerTimes?: Record<string, PlayerPlayTime>;
+  timer?: MatchTimerType;
   onManageClick?: () => void;
 }
 
-export function Bench({ players, benchPlayerIds, playerAvailability, onManageClick }: BenchProps) {
+export function Bench({ players, benchPlayerIds, playerAvailability, playerTimes, timer, onManageClick }: BenchProps) {
   const { isOver, setNodeRef } = useDroppable({
     id: 'bench',
     data: { isBench: true },
   });
 
+  const [, setTick] = useState(0);
+
+  // Re-render every second when timer is running for live traffic light updates
+  useEffect(() => {
+    if (!timer?.isRunning) return;
+    const interval = setInterval(() => setTick(t => t + 1), 1000);
+    return () => clearInterval(interval);
+  }, [timer?.isRunning]);
+
   const benchPlayers = benchPlayerIds
     .map(id => players.find(p => p.id === id))
     .filter((p): p is Player => p !== undefined);
+
+  const timerData = timer ?? { isRunning: false, startedAt: null, elapsedBeforePause: 0 };
+  const hasTimerData = timer && (timer.elapsedBeforePause > 0 || timer.isRunning);
 
   return (
     <div
@@ -68,14 +84,27 @@ export function Bench({ players, benchPlayerIds, playerAvailability, onManageCli
         ) : (
           benchPlayers.map(player => {
             const avail = playerAvailability?.[player.id];
+            const playedSec = calcPlayerPlayTime(playerTimes?.[player.id], timerData);
+            const tl = getTrafficLight(playedSec, avail);
+            const showTimeInfo = hasTimerData && avail;
+
             return (
               <div key={player.id} className="flex flex-col items-center gap-0.5">
                 <PlayerBadge id={player.id} name={player.name} />
-                {avail && avail !== '90' && (
+                {showTimeInfo ? (
+                  <div className="flex items-center gap-1">
+                    {tl !== 'none' && (
+                      <span className={`w-2 h-2 rounded-full ${TRAFFIC_DOT_COLOR[tl]}`} />
+                    )}
+                    <span className="text-[10px] font-medium text-gray-500">
+                      {formatMinutes(playedSec)}/{avail}'
+                    </span>
+                  </div>
+                ) : avail && avail !== '90' ? (
                   <span className="text-[10px] font-medium text-gray-500">
-                    {availabilityLabel[avail]}
+                    {avail}'
                   </span>
-                )}
+                ) : null}
               </div>
             );
           })

@@ -1,5 +1,6 @@
 import { useDraggable } from '@dnd-kit/core';
 import { CSS } from '@dnd-kit/utilities';
+import type { TrafficLightStatus } from '../lib/trafficLight';
 
 interface PlayerBadgeProps {
   id: string;
@@ -7,6 +8,7 @@ interface PlayerBadgeProps {
   isDragging?: boolean;
   isOnField?: boolean;
   isFlag?: boolean;
+  trafficLight?: TrafficLightStatus;
 }
 
 function getDisplayName(name: string): string {
@@ -22,7 +24,14 @@ function getDisplayName(name: string): string {
   return name.slice(0, 5) + '.';
 }
 
-export function PlayerBadge({ id, name, isDragging, isOnField, isFlag }: PlayerBadgeProps) {
+const TRAFFIC_LIGHT_BORDER: Record<string, string> = {
+  green: 'border-green-500',
+  orange: 'border-amber-500',
+  red: 'border-red-600',
+  none: 'border-red-600',
+};
+
+export function PlayerBadge({ id, name, isDragging, isOnField, isFlag, trafficLight }: PlayerBadgeProps) {
   const { attributes, listeners, setNodeRef, transform } = useDraggable({
     id,
     data: { name, isOnField, isFlag },
@@ -40,7 +49,8 @@ export function PlayerBadge({ id, name, isDragging, isOnField, isFlag }: PlayerB
   // Determine badge style based on location
   const getBadgeStyle = () => {
     if (isOnField) {
-      return 'bg-white text-gray-800 shadow-md border-2 border-red-600';
+      const borderClass = trafficLight ? TRAFFIC_LIGHT_BORDER[trafficLight] : 'border-red-600';
+      return `bg-white text-gray-800 shadow-md border-2 ${borderClass}`;
     }
     if (isFlag) {
       return 'bg-orange-500 text-white shadow-sm';
@@ -72,12 +82,13 @@ export function PlayerBadge({ id, name, isDragging, isOnField, isFlag }: PlayerB
   );
 }
 
-export function PlayerBadgeOverlay({ name, isOnField, isFlag }: { name: string; isOnField?: boolean; isFlag?: boolean }) {
+export function PlayerBadgeOverlay({ name, isOnField, isFlag, trafficLight }: { name: string; isOnField?: boolean; isFlag?: boolean; trafficLight?: TrafficLightStatus }) {
   const displayName = getDisplayName(name);
 
   const getOverlayStyle = () => {
     if (isOnField) {
-      return 'bg-white text-gray-800 border-2 border-red-600';
+      const borderClass = trafficLight ? TRAFFIC_LIGHT_BORDER[trafficLight] : 'border-red-600';
+      return `bg-white text-gray-800 border-2 ${borderClass}`;
     }
     if (isFlag) {
       return 'bg-orange-500 text-white';
