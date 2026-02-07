@@ -181,20 +181,9 @@ export function MatchStats({
                         </span>
                       )}
                     </div>
-                    <div className="text-right">
-                      <span className="font-mono font-semibold text-gray-900">
-                        {formatTime(playTime)}
-                      </span>
-                      {desiredSec ? (
-                        <span className="text-xs text-gray-500 ml-2">
-                          / {formatTime(desiredSec)}
-                        </span>
-                      ) : (
-                        <span className="text-xs text-gray-500 ml-2">
-                          ({Math.round(percentage)}%)
-                        </span>
-                      )}
-                    </div>
+                    <span className="font-mono font-semibold text-gray-900">
+                      {formatTime(playTime)}
+                    </span>
                   </div>
                   <div className="h-2 bg-gray-100 rounded-full overflow-hidden relative">
                     <div
@@ -208,6 +197,18 @@ export function MatchStats({
                         style={{ left: `${Math.min((desiredSec / maxPlayTime) * 100, 100)}%` }}
                       />
                     )}
+                  </div>
+                  {/* Played vs desired details */}
+                  <div className="flex items-center justify-between mt-1.5 text-xs text-gray-500">
+                    <span>
+                      Gespeeld: <span className="font-mono font-medium text-gray-700">{formatTime(playTime)}</span>
+                      <span className="text-gray-400 mx-1">({Math.round(percentage)}%)</span>
+                    </span>
+                    {desiredSec ? (
+                      <span>
+                        Gewenst: <span className="font-mono font-medium text-gray-700">{availability}'</span>
+                      </span>
+                    ) : null}
                   </div>
                   {/* Flag time indicator */}
                   {flagTime > 0 && (
