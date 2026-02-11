@@ -354,9 +354,10 @@ export function useMatchState() {
   const assignPlayerToPosition = useCallback(async (playerId: string, positionId: string) => {
     if (!matchState) return;
 
+    try {
     const now = Date.now();
     const newFieldPositions: FieldPositions = { ...matchState.field_positions };
-    let newBench = [...matchState.bench_players];
+    let newBench = [...(matchState.bench_players || [])];
     const newPlayerTimes = { ...(matchState.player_times || {}) };
     let newFlagPlayer = matchState.flag_player;
 
@@ -453,11 +454,15 @@ export function useMatchState() {
       player_times: newPlayerTimes,
       flag_player: newFlagPlayer,
     });
+    } catch (err) {
+      console.error('assignPlayerToPosition error:', err);
+    }
   }, [matchState, updateMatchState]);
 
   const movePlayerToBench = useCallback(async (playerId: string) => {
     if (!matchState) return;
 
+    try {
     const now = Date.now();
     const newFieldPositions: FieldPositions = { ...matchState.field_positions };
     const positionIds = getPositionIds(matchState.formation);
@@ -517,15 +522,19 @@ export function useMatchState() {
       player_times: newPlayerTimes,
       flag_player: newFlagPlayer,
     });
+    } catch (err) {
+      console.error('movePlayerToBench error:', err);
+    }
   }, [matchState, updateMatchState]);
 
   // Assign player to flag position
   const assignPlayerToFlag = useCallback(async (playerId: string) => {
     if (!matchState) return;
 
+    try {
     const now = Date.now();
     const newFieldPositions: FieldPositions = { ...matchState.field_positions };
-    let newBench = [...matchState.bench_players];
+    let newBench = [...(matchState.bench_players || [])];
     const newPlayerTimes = { ...(matchState.player_times || {}) };
     const positionIds = getPositionIds(matchState.formation);
     const fieldPos = newFieldPositions as Record<string, string | undefined>;
@@ -606,6 +615,9 @@ export function useMatchState() {
       flag_player: newFlagPlayer,
       player_times: newPlayerTimes,
     });
+    } catch (err) {
+      console.error('assignPlayerToFlag error:', err);
+    }
   }, [matchState, updateMatchState]);
 
   // Move flag player to bench

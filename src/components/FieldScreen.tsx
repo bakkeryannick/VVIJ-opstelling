@@ -102,35 +102,42 @@ export function FieldScreen({
   const sensors = useSensors(touchSensor, mouseSensor);
 
   const handleDragStart = (event: DragStartEvent) => {
-    const { active } = event;
-    const data = active.data.current as { name: string; isOnField?: boolean; isFlag?: boolean };
-    setActivePlayer({
-      id: active.id as string,
-      name: data.name,
-      isOnField: data.isOnField,
-      isFlag: data.isFlag,
-    });
+    try {
+      const { active } = event;
+      const data = active.data.current;
+      if (!data || typeof data.name !== 'string') return;
+      setActivePlayer({
+        id: active.id as string,
+        name: data.name,
+        isOnField: data.isOnField,
+        isFlag: data.isFlag,
+      });
+    } catch {
+      // Prevent drag errors from crashing the app
+    }
   };
 
   const handleDragEnd = (event: DragEndEvent) => {
-    const { active, over } = event;
-    setActivePlayer(null);
+    try {
+      const { active, over } = event;
+      setActivePlayer(null);
 
-    if (!over) return;
+      if (!over) return;
 
-    const playerId = active.id as string;
-    const overData = over.data.current as {
-      positionId?: string;
-      isBench?: boolean;
-      isFlag?: boolean;
-    };
+      const playerId = active.id as string;
+      const overData = over.data.current;
+      if (!overData) return;
 
-    if (overData.isBench) {
-      onMoveToBench(playerId);
-    } else if (overData.isFlag) {
-      onAssignToFlag(playerId);
-    } else if (overData.positionId) {
-      onAssignPlayer(playerId, overData.positionId);
+      if (overData.isBench) {
+        onMoveToBench(playerId);
+      } else if (overData.isFlag) {
+        onAssignToFlag(playerId);
+      } else if (overData.positionId) {
+        onAssignPlayer(playerId, overData.positionId);
+      }
+    } catch {
+      // Prevent drag errors from crashing the app
+      setActivePlayer(null);
     }
   };
 
@@ -236,6 +243,7 @@ export function FieldScreen({
         collisionDetection={pointerWithin}
         onDragStart={handleDragStart}
         onDragEnd={handleDragEnd}
+        onDragCancel={() => setActivePlayer(null)}
       >
         <div className="flex-1 flex flex-col p-4 gap-4 overflow-hidden">
           {/* Field with flag position on the left */}
