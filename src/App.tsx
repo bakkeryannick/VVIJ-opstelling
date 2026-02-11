@@ -48,7 +48,7 @@ function App() {
 
   // Check if there's an active match (has present players)
   const hasActiveMatch =
-    matchState !== null && matchState.present_players.length > 0;
+    matchState !== null && (matchState.present_players?.length ?? 0) > 0;
 
   const handlePinSuccess = () => {
     setView('home');

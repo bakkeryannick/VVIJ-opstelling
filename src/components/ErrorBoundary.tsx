@@ -6,6 +6,7 @@ interface Props {
 
 interface State {
   hasError: boolean;
+  errorMessage?: string;
 }
 
 export class ErrorBoundary extends Component<Props, State> {
@@ -20,6 +21,7 @@ export class ErrorBoundary extends Component<Props, State> {
 
   componentDidCatch(error: Error, info: React.ErrorInfo) {
     console.error('App crashed:', error, info.componentStack);
+    this.setState({ errorMessage: `${error.name}: ${error.message}` });
   }
 
   render() {
@@ -33,9 +35,14 @@ export class ErrorBoundary extends Component<Props, State> {
             <h2 className="text-lg font-semibold text-gray-800 mb-2">
               Er ging iets mis
             </h2>
-            <p className="text-gray-600 mb-6">
+            <p className="text-gray-600 mb-4">
               De app is gecrasht. Klik op de knop om opnieuw te laden.
             </p>
+            {this.state.errorMessage && (
+              <p className="text-xs text-gray-400 mb-4 font-mono break-all bg-gray-50 p-2 rounded">
+                {this.state.errorMessage}
+              </p>
+            )}
             <button
               onClick={() => window.location.reload()}
               className="w-full py-3 px-4 bg-red-600 text-white font-medium rounded-lg hover:bg-red-700 transition-colors"

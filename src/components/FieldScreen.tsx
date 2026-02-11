@@ -79,10 +79,11 @@ export function FieldScreen({
 
   // Compute traffic light status for all present players (recomputes on each tick)
   const trafficLights: Record<string, TrafficLightStatus> = {};
-  for (const playerId of matchState.present_players) {
+  const timer = matchState.timer ?? { isRunning: false, startedAt: null, elapsedBeforePause: 0 };
+  for (const playerId of (matchState.present_players ?? [])) {
     const avail = matchState.player_availability?.[playerId];
     if (!avail) continue;
-    const played = calcPlayerPlayTime(matchState.player_times?.[playerId], matchState.timer);
+    const played = calcPlayerPlayTime(matchState.player_times?.[playerId], timer);
     trafficLights[playerId] = getTrafficLight(played, avail);
   }
 
@@ -117,7 +118,7 @@ export function FieldScreen({
     }
   };
 
-  const handleDragEnd = (event: DragEndEvent) => {
+  const handleDragEnd = async (event: DragEndEvent) => {
     try {
       const { active, over } = event;
       setActivePlayer(null);
@@ -129,20 +130,20 @@ export function FieldScreen({
       if (!overData) return;
 
       if (overData.isBench) {
-        onMoveToBench(playerId);
+        await onMoveToBench(playerId);
       } else if (overData.isFlag) {
-        onAssignToFlag(playerId);
+        await onAssignToFlag(playerId);
       } else if (overData.positionId) {
-        onAssignPlayer(playerId, overData.positionId);
+        await onAssignPlayer(playerId, overData.positionId);
       }
-    } catch {
-      // Prevent drag errors from crashing the app
+    } catch (err) {
+      console.error('handleDragEnd error:', err);
       setActivePlayer(null);
     }
   };
 
   const presentPlayers = players.filter(p =>
-    matchState.present_players.includes(p.id)
+    (matchState.present_players ?? []).includes(p.id)
   );
 
   return (

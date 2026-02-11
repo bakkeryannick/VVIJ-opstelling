@@ -73,9 +73,13 @@ export function useMatchState() {
 
       if (error) throw error;
 
-      // Ensure timer, player_times, flag_player, match_name and player_availability exist (for backwards compatibility)
+      // Ensure all fields have valid defaults (for backwards compatibility)
       const stateWithTimer: MatchState = {
         ...data,
+        formation: data.formation || '4-3-3',
+        field_positions: data.field_positions || {},
+        bench_players: data.bench_players || [],
+        present_players: data.present_players || [],
         timer: data.timer || DEFAULT_TIMER,
         player_times: data.player_times || {},
         flag_player: data.flag_player || null,
@@ -787,9 +791,13 @@ export function useMatchState() {
             const hasAvailability = newState.player_availability && Object.keys(newState.player_availability).length > 0;
             return {
               ...newState,
-              timer: newState.timer || DEFAULT_TIMER,
-              player_times: newState.player_times || {},
-              flag_player: newState.flag_player ?? null,
+              formation: newState.formation || prev?.formation || '4-3-3',
+              field_positions: newState.field_positions || prev?.field_positions || {},
+              bench_players: newState.bench_players || prev?.bench_players || [],
+              present_players: newState.present_players || prev?.present_players || [],
+              timer: newState.timer || prev?.timer || DEFAULT_TIMER,
+              player_times: newState.player_times || prev?.player_times || {},
+              flag_player: newState.flag_player ?? prev?.flag_player ?? null,
               match_name: newState.match_name ?? prev?.match_name ?? null,
               player_availability: hasAvailability
                 ? newState.player_availability
